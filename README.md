@@ -1,6 +1,8 @@
 # parallel-algorithms-2026
 
-Сборка в релизе имеет следующий результат:
+## QuickSort
+
+Сборка в релизе:
 
 ```
 $ cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
