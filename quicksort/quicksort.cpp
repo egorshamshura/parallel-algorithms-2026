@@ -45,10 +45,7 @@ void parallel_quicksort(parlay::sequence<int>& arr) {
             greater.push_back(arr[i]);
         }
     }
-
-    if (less.size() + equal.size() + greater.size() != arr.size())
-        throw std::logic_error("Partitioning error: sizes do not add up.");
-
+    
     parlay::par_do(
         [&] { parallel_quicksort(less); },
         [&] { parallel_quicksort(greater); }
