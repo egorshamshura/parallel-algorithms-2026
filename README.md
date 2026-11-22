@@ -12,6 +12,6 @@ $ ./build/quicksort/tests/Quicksort_test
 
 Мои результаты 2,3 GHz Quad-Core Intel Core i5:
 ```
-Average Quicksort time: 66.1572 seconds
-Average Parallel Quicksort time: 16.415 seconds
+Average Quicksort time: 10.16 seconds
+Average Parallel Quicksort time: 3.06495 seconds
 ```

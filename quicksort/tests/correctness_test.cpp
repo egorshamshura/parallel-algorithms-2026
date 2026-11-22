@@ -1,7 +1,7 @@
 #include "quicksort.h"
 #include <gtest/gtest.h>
 
-constexpr int N = 1;
+constexpr int N = 5;
 
 TEST(QuicksortTest, Correctness) {
   parlay::sequence<int> arr = {5, 2, 9, 1, 5, 6};
@@ -20,6 +20,35 @@ TEST(RandomizedQuicksortTest, Correctness) {
   EXPECT_EQ(arr, expected);
 }
 
+TEST(ParallelQuicksortTest, SortsBothPartitions) {
+  parlay::sequence<int> arr;
+  for (int i = 0; i < 150000; ++i) {
+    arr.push_back((i * 7919) % 10007);
+  }
+  parlay::sequence<int> expected = arr;
+  std::sort(expected.begin(), expected.end());
+
+  parlay::execute_with_scheduler(4, [&] {
+    quicksort::parallel_quicksort(arr);
+  });
+
+  EXPECT_EQ(arr, expected);
+}
+
+TEST(ParallelQuicksortTest, HandlesEdgeCases) {
+  const parlay::sequence<int> cases[] = {
+      {}, {42}, {1, 2, 3, 4, 5}, {5, 4, 3, 2, 1}, {7, 7, 7, 7}};
+
+  parlay::execute_with_scheduler(4, [&] {
+    for (auto arr : cases) {
+      auto expected = arr;
+      std::sort(expected.begin(), expected.end());
+      quicksort::parallel_quicksort(arr);
+      EXPECT_EQ(arr, expected);
+    }
+  });
+}
+
 TEST(CompareTime, Performance) {
   std::chrono::duration<double> total_quick{0};
   std::chrono::duration<double> total_parallel{0};
@@ -27,7 +56,8 @@ TEST(CompareTime, Performance) {
   for (int run = 0; run < N; ++run) {
     parlay::sequence<int> arr;
     for (int i = 0; i < 100000000; ++i) {
-      arr.push_back(rand() % 100000);
+        auto x = rand() % 10000000;
+        arr.push_back(x);
     }
     parlay::sequence<int> arr_copy = arr;
     auto expected = arr;
@@ -39,13 +69,11 @@ TEST(CompareTime, Performance) {
     total_quick += end - start;
 
     start = std::chrono::high_resolution_clock::now();
-    parlay::execute_with_scheduler(4, [&] {
-      quicksort::parallel_quicksort(arr_copy);
-    });
+    quicksort::parallel_quicksort(arr_copy);
     end = std::chrono::high_resolution_clock::now();
     total_parallel += end - start;
-    EXPECT_EQ(arr, expected) << "Ошибка в последовательном quicksort\n";
-    EXPECT_EQ(arr_copy, expected) << "Ошибка в parallel_quicksort\n";
+    EXPECT_EQ(arr, expected) << "quicksort error\n";
+    EXPECT_EQ(arr_copy, expected) << "parallel_quicksort error\n";
   }
 
   std::cout << "Average Quicksort time: " << total_quick.count() / N << " seconds\n";
